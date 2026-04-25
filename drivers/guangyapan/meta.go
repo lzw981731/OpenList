@@ -6,19 +6,19 @@ import (
 )
 
 type Addition struct {
-	driver.RootID
-	PhoneNumber    string `json:"phone_number" type:"text" help:"Phone number for SMS login, e.g. +86 13800000000"`
-	CaptchaToken   string `json:"captcha_token" type:"text" help:"Captcha token required by /v1/auth/verification"`
-	SendCode       bool   `json:"send_code" type:"bool" help:"Set true and save to send SMS code, it auto-resets to false after sending"`
-	VerifyCode     string `json:"verify_code" type:"text" help:"SMS verification code used with phone_number; fill then save to finish login"`
-	VerificationID string `json:"verification_id" type:"text" help:"Auto-generated after sending SMS code; do not edit manually"`
-	AccessToken    string `json:"access_token" type:"text" help:"Bearer access token (optional if refresh_token is provided)"`
-	RefreshToken   string `json:"refresh_token" type:"text" help:"Refresh token for auto-login/auto-refresh"`
-	ClientID       string `json:"client_id" default:"aMe-8VSlkrbQXpUR"`
-	DeviceID       string `json:"device_id" help:"Optional custom device id (32 hex chars), auto-generated when empty"`
-	PageSize       int    `json:"page_size" type:"number" default:"100"`
-	OrderBy        int    `json:"order_by" type:"number" default:"3" help:"0:name,1:size,2:create_time,3:update_time"`
-	SortType       int    `json:"sort_type" type:"number" default:"1" help:"0:asc,1:desc"`
+	driver.RootID // 核心底层组件，保留不动
+	PhoneNumber    string `json:"手机号" type:"text" help:"短信登录手机号，例如 +86 13800000000"`
+	CaptchaToken   string `json:"人机验证Token" type:"text" help:"填写抓包获取的 Captcha Token (如果不需要可留空)"`
+	SendCode       bool   `json:"发送验证码" type:"bool" help:"填好手机号后，开启此开关并【保存】即可发送短信验证码 (发送后会自动重置)"`
+	VerifyCode     string `json:"短信验证码" type:"text" help:"收到短信后填入此处，再次【保存】即可完成最终登录"`
+	VerificationID string `json:"验证ID (自动)" type:"text" help:"发送短信后系统自动生成，请勿手动修改"`
+	AccessToken    string `json:"访问令牌 (自动)" type:"text" help:"登录成功后的授权凭证 (有 Refresh Token 时可留空)"`
+	RefreshToken   string `json:"刷新令牌 (自动)" type:"text" help:"用于自动续期的 Refresh Token"`
+	ClientID       string `json:"客户端ID" default:"aMe-8VSlkrbQXpUR" help:"默认客户端ID，一般保持默认即可"`
+	DeviceID       string `json:"设备ID" help:"可选，自定义设备ID(32位字符)，留空则自动生成"`
+	PageSize       int    `json:"分页大小" type:"number" default:"100"`
+	OrderBy        int    `json:"排序字段" type:"number" default:"3" help:"0:文件名, 1:大小, 2:创建时间, 3:更新时间"`
+	SortType       int    `json:"排序规则" type:"number" default:"1" help:"0:升序(从小到大), 1:降序(从大到小)"`
 }
 
 var config = driver.Config{
@@ -30,7 +30,8 @@ var config = driver.Config{
 	NeedMs:            false,
 	DefaultRoot:       "",
 	CheckStatus:       true,
-	Alert:             "info|Two-stage SMS login: (1) fill phone_number (+ captcha_token if needed), set send_code=true and save; (2) fill verify_code and save to finish login and auto-save access_token/refresh_token.",
+	// Alert 提示语也全部汉化，并分段让用户看得更清楚
+	Alert:             "info|【广雅盘短信登录步骤】<br>1. 填写【手机号】(若需要则填人机验证Token)，开启【发送验证码】开关并点击底部保存；<br>2. 收到短信后，填写【短信验证码】，再次点击保存即可完成登录！系统会自动获取并保存令牌。",
 	NoOverwriteUpload: true,
 }
 
