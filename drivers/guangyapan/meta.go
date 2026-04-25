@@ -22,7 +22,7 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:              "GuangYaPan",
+	Name:              "光鸭云盘",
 	LocalSort:         false,
 	OnlyProxy:         false,
 	NoCache:           false,
@@ -31,7 +31,7 @@ var config = driver.Config{
 	DefaultRoot:       "",
 	CheckStatus:       true,
 	// Alert 提示语也全部汉化，并分段让用户看得更清楚
-	Alert:             "info|【广雅盘短信登录步骤】<br>1. 填写【手机号】(若需要则填人机验证Token)，开启【发送验证码】开关并点击底部保存；<br>2. 收到短信后，填写【短信验证码】，再次点击保存即可完成登录！系统会自动获取并保存令牌。",
+	Alert:             "info|【光鸭云盘短信登录步骤】<br>1. 填写【手机号】(若需要则填人机验证Token)，开启【发送验证码】开关并点击底部保存；<br>2. 收到短信后，填写【短信验证码】，再次点击保存即可完成登录！系统会自动获取并保存令牌。",
 	NoOverwriteUpload: true,
 }
 
