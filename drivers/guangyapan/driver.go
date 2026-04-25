@@ -11,11 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alist-org/alist/v3/drivers/base"
-	"github.com/alist-org/alist/v3/internal/driver"
-	"github.com/alist-org/alist/v3/internal/errs"
-	"github.com/alist-org/alist/v3/internal/model"
-	"github.com/alist-org/alist/v3/internal/op"
+	// 1. 把这 5 行原先的 alist-org/alist/v3 替换成 OpenList 的官方模块名
+	// (请务必确认这里的前缀跟你项目根目录 go.mod 第一行写的一模一样)
+	"github.com/OpenListTeam/OpenList/v4/drivers/base"
+	"github.com/OpenListTeam/OpenList/v4/internal/driver"
+	"github.com/OpenListTeam/OpenList/v4/internal/errs"
+	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/op"
+
+	// 2. 下面这 3 个是真正的外部第三方公用库，保留原样，绝对不要改！
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
