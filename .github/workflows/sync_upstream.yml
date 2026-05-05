@@ -12,6 +12,12 @@ on:
         default: 'false'
         type: boolean
 
+# 顶层权限配置
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
 env:
   UPSTREAM_REPO: OpenListTeam/OpenList
   UPSTREAM_BRANCH: main
@@ -21,9 +27,6 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout
