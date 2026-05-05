@@ -133,24 +133,27 @@ jobs:
 
       - name: Commit and push
         if: steps.check.outputs.has_updates == 'true'
+        id: commit
         run: |
           git add -A
-          
+
           # 检查是否有变更
           if git diff --cached --quiet; then
             echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             git commit -m "sync: merge upstream ${{ env.UPSTREAM_REPO }} (${{ steps.check.outputs.behind }} commits)
-            
+
             - Synced from: ${{ env.UPSTREAM_REPO }}/${{ env.UPSTREAM_BRANCH }}
             - Custom driver: ${{ env.CUSTOM_DRIVER }} preserved
             - Auto-injected: ${{ env.CUSTOM_DRIVER }} import to all.go"
-            
+
             git push origin ${{ steps.merge.outputs.sync_branch }}
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Pull Request
-        if: steps.check.outputs.has_updates == 'true'
+        if: steps.check.outputs.has_updates == 'true' && steps.commit.outputs.has_changes == 'true'
         uses: actions/github-script@v7
         with:
           script: |
