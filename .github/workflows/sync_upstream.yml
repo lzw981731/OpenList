@@ -2,17 +2,17 @@ name: Sync Upstream
 
 on:
   schedule:
-    # 每天北京时间 02:00 执行 (UTC 18:00)
+    # 姣忓ぉ鍖椾含鏃堕棿 02:00 鎵ц (UTC 18:00)
     - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       force_sync:
-        description: '强制同步（忽略冲突检查）'
+        description: '寮哄埗鍚屾锛堝拷鐣ュ啿绐佹鏌ワ級'
         required: false
         default: 'false'
         type: boolean
 
-# 顶层权限配置
+# 椤跺眰鏉冮檺閰嶇疆
 permissions:
   contents: write
   pull-requests: write
@@ -50,7 +50,7 @@ jobs:
         run: |
           LOCAL=$(git rev-parse HEAD)
           UPSTREAM=$(git rev-parse upstream/${{ env.UPSTREAM_BRANCH }})
-          
+
           if [ "$LOCAL" = "$UPSTREAM" ]; then
             echo "Already up to date"
             echo "has_updates=false" >> $GITHUB_OUTPUT
@@ -58,6 +58,7 @@ jobs:
             echo "Updates available"
             echo "has_updates=true" >> $GITHUB_OUTPUT
             echo "behind=$(git rev-list --count HEAD..upstream/${{ env.UPSTREAM_BRANCH }})" >> $GITHUB_OUTPUT
+            echo "upstream_sha=$UPSTREAM" >> $GITHUB_OUTPUT
           fi
 
       - name: Backup custom driver
@@ -74,20 +75,20 @@ jobs:
           SYNC_BRANCH="sync-upstream-$(date +%Y%m%d-%H%M%S)"
           git checkout -b $SYNC_BRANCH
           
-          # 尝试合并上游
+          # 灏濊瘯鍚堝苟涓婃父
           if git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-commit --no-edit; then
             echo "merge_success=true" >> $GITHUB_OUTPUT
             echo "sync_branch=$SYNC_BRANCH" >> $GITHUB_OUTPUT
           else
             echo "merge_success=false" >> $GITHUB_OUTPUT
             echo "sync_branch=$SYNC_BRANCH" >> $GITHUB_OUTPUT
-            # 保留冲突状态，后续处理
+            # 淇濈暀鍐茬獊鐘舵€侊紝鍚庣画澶勭悊
           fi
 
       - name: Restore custom driver
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          # 确保目录存在
+          # 纭繚鐩綍瀛樺湪
           mkdir -p drivers/${{ env.CUSTOM_DRIVER }}
           cp -r /tmp/backup/${{ env.CUSTOM_DRIVER }}/* drivers/${{ env.CUSTOM_DRIVER }}/
           echo "Restored drivers/${{ env.CUSTOM_DRIVER }}"
@@ -95,16 +96,15 @@ jobs:
       - name: Inject custom driver import
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          # 检查 all.go 是否已包含 guangyapan import
+          # 妫€鏌?all.go 鏄惁宸插寘鍚?guangyapan import
           if ! grep -q "${{ env.CUSTOM_DRIVER }}" drivers/all.go; then
             echo "Injecting ${{ env.CUSTOM_DRIVER }} import..."
             
-            # 在 import 块的最后一个 _ "github.com/..." 后插入
-            # 使用 sed 在 yandex_disk 行后添加（如果存在）
+            # 鍦?import 鍧楃殑鏈€鍚庝竴涓?_ "github.com/..." 鍚庢彃鍏?            # 浣跨敤 sed 鍦?yandex_disk 琛屽悗娣诲姞锛堝鏋滃瓨鍦級
             if grep -q 'yandex_disk' drivers/all.go; then
               sed -i '/_ "github.com\/OpenListTeam\/OpenList\/v4\/drivers\/yandex_disk"/a\'$'\t''"${{ env.CUSTOM_IMPORT }}"' drivers/all.go
             else
-              # 如果没有 yandex_disk，在最后一个 _ "github.com/..." 行后插入
+              # 濡傛灉娌℃湁 yandex_disk锛屽湪鏈€鍚庝竴涓?_ "github.com/..." 琛屽悗鎻掑叆
               sed -i '/^)$/i\'$'\t''"${{ env.CUSTOM_IMPORT }}"' drivers/all.go
             fi
             
@@ -118,14 +118,12 @@ jobs:
         run: |
           echo "::warning::Merge conflicts detected!"
           
-          # 对于 all.go，尝试自动解决
-          if git status --porcelain | grep -q "drivers/all.go"; then
-            # 保留上游版本，后续手动注入
-            git checkout --theirs drivers/all.go
+          # 瀵逛簬 all.go锛屽皾璇曡嚜鍔ㄨВ鍐?          if git status --porcelain | grep -q "drivers/all.go"; then
+            # 淇濈暀涓婃父鐗堟湰锛屽悗缁墜鍔ㄦ敞鍏?            git checkout --theirs drivers/all.go
             git add drivers/all.go
           fi
           
-          # 标记其他冲突文件
+          # 鏍囪鍏朵粬鍐茬獊鏂囦欢
           CONFLICTS=$(git diff --name-only --diff-filter=U)
           echo "conflicts<<EOF" >> $GITHUB_ENV
           echo "$CONFLICTS" >> $GITHUB_ENV
@@ -137,7 +135,7 @@ jobs:
         run: |
           git add -A
 
-          # 检查是否有变更
+          # 妫€鏌ユ槸鍚︽湁鍙樻洿
           if git diff --cached --quiet; then
             echo "No changes to commit"
             echo "has_changes=false" >> $GITHUB_OUTPUT
@@ -162,7 +160,7 @@ jobs:
             const syncBranch = process.env.SYNC_BRANCH;
             console.log(`Creating PR for branch: ${syncBranch}`);
             
-            // 验证分支存在
+            // 楠岃瘉鍒嗘敮瀛樺湪
             try {
               const { data: ref } = await github.rest.git.getRef({
                 owner: context.repo.owner,
@@ -181,21 +179,21 @@ jobs:
             const behind = '${{ steps.check.outputs.behind }}';
             const conflicts = process.env.conflicts || '';
             
-            let body = `## 🔄 Upstream Sync\n\n`;
+            let body = `## 馃攧 Upstream Sync\n\n`;
             body += `**Source:** ${{ env.UPSTREAM_REPO }}/${{ env.UPSTREAM_BRANCH }}\n`;
             body += `**Commits behind:** ${behind}\n\n`;
             
-            body += `### ✅ Preserved Custom Content\n`;
+            body += `### 鉁?Preserved Custom Content\n`;
             body += `- \`drivers/${{ env.CUSTOM_DRIVER }}/\` directory\n`;
             body += `- \`drivers/all.go\` import injection\n\n`;
             
             if (!mergeSuccess) {
-              body += `### ⚠️ Merge Conflicts Detected\n`;
+              body += `### 鈿狅笍 Merge Conflicts Detected\n`;
               body += `The following files have conflicts that need manual resolution:\n\n`;
               body += '```\n' + conflicts + '\n```\n\n';
               body += `**Please resolve conflicts before merging.**\n`;
             } else {
-              body += `### ✅ No Conflicts\n`;
+              body += `### 鉁?No Conflicts\n`;
               body += `This PR can be merged automatically.\n`;
             }
             
@@ -211,7 +209,7 @@ jobs:
             
             console.log(`Created PR #${pr.number}: ${pr.html_url}`);
             
-            // 添加标签
+            // 娣诲姞鏍囩
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -219,19 +217,19 @@ jobs:
               labels: ['upstream-sync', 'automated']
             });
             
-            // 如果有冲突，添加评论提醒
+            // 濡傛灉鏈夊啿绐侊紝娣诲姞璇勮鎻愰啋
             if (!mergeSuccess) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: `⚠️ **Conflicts detected!**\n\nPlease resolve the following files manually:\n\`\`\`\n${conflicts}\n\`\`\`\n\nDon't forget to verify that \`drivers/${{ env.CUSTOM_DRIVER }}/\` is preserved.`
+                body: `鈿狅笍 **Conflicts detected!**\n\nPlease resolve the following files manually:\n\`\`\`\n${conflicts}\n\`\`\`\n\nDon't forget to verify that \`drivers/${{ env.CUSTOM_DRIVER }}/\` is preserved.`
               });
             }
 
 
       - name: Create Release
-        if: steps.check.outputs.has_updates == 'true' && steps.commit.outputs.has_changes == 'true' && steps.merge.outputs.merge_success == 'true'
+        if: steps.check.outputs.has_updates == 'true' && steps.merge.outputs.merge_success == 'true'
         uses: actions/github-script@v7
         env:
           UPSTREAM_SHA: ${{ steps.check.outputs.upstream_sha }}
@@ -241,17 +239,28 @@ jobs:
             const upstreamSha = process.env.UPSTREAM_SHA;
             const behind = process.env.BEHIND;
 
-            // 从上游获取最新 tag
+            // 浠庝笂娓镐粨搴撹幏鍙栨渶鏂?tag锛堜笉鏄綋鍓嶄粨搴擄級
             const { data: upstreamTags } = await github.rest.repos.listTags({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 1
+              owner: '${{ env.UPSTREAM_REPO }}'.split('/')[0],
+              repo: '${{ env.UPSTREAM_REPO }}'.split('/')[1],
+              per_page: 20
             });
 
+            // 杩囨护鎺?beta銆乤lpha 绛夐鍙戝竷鏍囩锛屽彧鍙栨寮忕増鏈?            const stableTags = upstreamTags.filter(tag => 
+              !tag.name.includes('beta') && 
+              !tag.name.includes('alpha') && 
+              !tag.name.includes('rc') &&
+              /^v?\d+\.\d+\.\d+$/.test(tag.name)
+            );
+
             let newVersion;
-            if (upstreamTags && upstreamTags.length > 0) {
+            if (stableTags && stableTags.length > 0) {
+              newVersion = stableTags[0].name.replace('v', '');
+              console.log(`Using upstream stable version: v${newVersion}`);
+            } else if (upstreamTags && upstreamTags.length > 0) {
+              // 濡傛灉娌℃湁姝ｅ紡鐗堟湰锛屼娇鐢ㄦ渶鏂扮殑 tag
               newVersion = upstreamTags[0].name.replace('v', '');
-              console.log(`Using upstream version: v${newVersion}`);
+              console.log(`Using upstream latest version: v${newVersion}`);
             } else {
               newVersion = `0.0.0-${upstreamSha.substring(0, 7)}`;
               console.log(`No upstream tags, using SHA-based version: v${newVersion}`);
@@ -259,8 +268,7 @@ jobs:
 
             const tagName = `v${newVersion}`;
 
-            // 检查 tag 是否已存在
-            try {
+            // 妫€鏌?tag 鏄惁宸插瓨鍦?            try {
               await github.rest.git.getRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -269,10 +277,10 @@ jobs:
               console.log(`Tag ${tagName} already exists, skipping release`);
               return;
             } catch (error) {
-              // Tag 不存在，继续创建
+              // Tag 涓嶅瓨鍦紝缁х画鍒涘缓
             }
 
-            // 创建 tag
+            // 鍒涘缓 tag
             await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -280,7 +288,7 @@ jobs:
               sha: context.sha
             });
 
-            // 创建 Release
+            // 鍒涘缓 Release
             const releaseBody = "## Upstream Sync Release\n\n" +
               "**Version:** " + tagName + "\n" +
               "**Source:** OpenListTeam/OpenList\n" +
