@@ -75,7 +75,7 @@ jobs:
           git checkout -b $SYNC_BRANCH
           
           # 尝试合并上游
-          if git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit; then
+          if git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-commit --no-edit; then
             echo "merge_success=true" >> $GITHUB_OUTPUT
             echo "sync_branch=$SYNC_BRANCH" >> $GITHUB_OUTPUT
           else
